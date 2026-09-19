@@ -1,0 +1,533 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-hotelbookingai",
+    "name": "Hotel Booking AI - Microservices API",
+    "description": "Ready-to-use step-by-step Postman collection for the Hotel Booking AI Microservices platform. Automatic token and ID propagation between requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "owner_token", "value": "", "type": "string" },
+    { "key": "customer_token", "value": "", "type": "string" },
+    { "key": "hotel_id", "value": "1", "type": "string" },
+    { "key": "room_id", "value": "1", "type": "string" },
+    { "key": "booking_id", "value": "1", "type": "string" },
+    { "key": "razorpay_order_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "01. Authentication & Users",
+      "item": [
+        {
+          "name": "1.1 Register Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"David Owner\",\n  \"email\": \"owner@hotel.com\",\n  \"password\": \"password123\",\n  \"role\": \"OWNER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Login Owner (Auto-saves Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('owner_token', jsonData.token);",
+                  "    console.log('Saved owner_token: ' + jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@hotel.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Customer\",\n  \"email\": \"alice@gmail.com\",\n  \"password\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Login Customer (Auto-saves Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('customer_token', jsonData.token);",
+                  "    console.log('Saved customer_token: ' + jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@gmail.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Get Current User Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Offers & Promotions",
+      "item": [
+        {
+          "name": "2.1 Create Offer (Owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"title\": \"Welcome 10% Discount\",\n  \"description\": \"Flat 10% discount on all bookings\",\n  \"discountPercentage\": 10.0,\n  \"maxDiscountAmount\": 1000.00,\n  \"validFrom\": \"2026-01-01\",\n  \"validTo\": \"2026-12-31\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/offers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offers"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Get Active Offers (Public)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/offers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offers"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Calculate Discount (Test Calculation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000.00,\n  \"offerCode\": \"WELCOME10\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/offers/calculate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offers", "calculate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Hotels & Room Inventory",
+      "item": [
+        {
+          "name": "3.1 Create Hotel (Owner - Auto-saves hotel_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('hotel_id', jsonData.id);",
+                  "    console.log('Saved hotel_id: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Palace Resort\",\n  \"city\": \"Mumbai\",\n  \"address\": \"Marine Drive, Nariman Point\",\n  \"description\": \"5-star luxury sea-facing hotel with infinity pool, spa, and rooftop dining.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/inventory/hotels",
+              "host": ["{{base_url}}"],
+              "path": ["api", "inventory", "hotels"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Add Deluxe Room (Owner - Auto-saves room_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('room_id', jsonData.id);",
+                  "    console.log('Saved room_id: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hotelId\": {{hotel_id}},\n  \"roomNumber\": \"101\",\n  \"type\": \"DELUXE\",\n  \"basePrice\": 4000.00,\n  \"capacity\": 2,\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/inventory/rooms",
+              "host": ["{{base_url}}"],
+              "path": ["api", "inventory", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "3.3 List All Hotels (Public)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/hotels",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hotels"]
+            }
+          }
+        },
+        {
+          "name": "3.4 Get Hotel by ID (Public)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/hotels/{{hotel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hotels", "{{hotel_id}}"]
+            }
+          }
+        },
+        {
+          "name": "3.5 Search Available Rooms with Discount Offer",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/rooms?hotelId={{hotel_id}}&offerCode=WELCOME10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "rooms"],
+              "query": [
+                { "key": "hotelId", "value": "{{hotel_id}}" },
+                { "key": "offerCode", "value": "WELCOME10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Bookings & Reservations",
+      "item": [
+        {
+          "name": "4.1 Create Booking Order (Auto-saves booking_id & razorpay_order_id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.bookingId) {",
+                  "    pm.collectionVariables.set('booking_id', jsonData.bookingId);",
+                  "    console.log('Saved booking_id: ' + jsonData.bookingId);",
+                  "}",
+                  "if (jsonData.razorpayOrderId) {",
+                  "    pm.collectionVariables.set('razorpay_order_id', jsonData.razorpayOrderId);",
+                  "    console.log('Saved razorpay_order_id: ' + jsonData.razorpayOrderId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomId\": {{room_id}},\n  \"checkInDate\": \"2026-11-01\",\n  \"checkOutDate\": \"2026-11-03\",\n  \"offerCode\": \"WELCOME10\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings/create-order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Get Customer Own Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/my-bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "my-bookings"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Payment & Event-Driven Confirmation",
+      "item": [
+        {
+          "name": "5.1 Verify Payment (Fires Kafka Event -> CONFIRMED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": {{booking_id}},\n  \"razorpayOrderId\": \"{{razorpay_order_id}}\",\n  \"razorpayPaymentId\": \"pay_mock_123456\",\n  \"razorpaySignature\": \"mock_sig\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/verify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "verify"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Get Payment Details by Booking ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/booking/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "booking", "{{booking_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Manager Operations",
+      "item": [
+        {
+          "name": "6.1 View Hotel Bookings (Manager/Owner)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/manager/bookings?hotelId={{hotel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "manager", "bookings"],
+              "query": [
+                { "key": "hotelId", "value": "{{hotel_id}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.2 Check-in Guest",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/manager/bookings/{{booking_id}}/check-in",
+              "host": ["{{base_url}}"],
+              "path": ["api", "manager", "bookings", "{{booking_id}}", "check-in"]
+            }
+          }
+        },
+        {
+          "name": "6.3 Check-out Guest",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/manager/bookings/{{booking_id}}/check-out",
+              "host": ["{{base_url}}"],
+              "path": ["api", "manager", "bookings", "{{booking_id}}", "check-out"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Owner Financial Reports (CQRS)",
+      "item": [
+        {
+          "name": "7.1 Get Owner Financial & Booking Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{owner_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/owner/reports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "owner", "reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Spring AI Concierge & RAG",
+      "item": [
+        {
+          "name": "8.1 Index Hotels into VectorStore (PGVector)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/ai/index",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "index"]
+            }
+          }
+        },
+        {
+          "name": "8.2 Semantic Similarity Search (PGVector)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"luxury sea facing resort with king size bed\",\n  \"topK\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "search"]
+            }
+          }
+        },
+        {
+          "name": "8.3 Chat with AI Concierge (Tool Calling + Memory)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Which hotels in Mumbai have deluxe rooms with discounts?\",\n  \"conversationId\": \"session_101\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
